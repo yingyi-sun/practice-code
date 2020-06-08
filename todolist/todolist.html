@@ -62,27 +62,37 @@
     var cls = oper.children;
     var empty = document.querySelector('.empty');
     var completeList = document.querySelector('#completlist');
-
+    var list = document.querySelectorAll('ul');
 
     ipt.onkeyup = function() {
-        if (ipt.value.length > 0) {
-            if (btn.className.indexOf('btnAdd') == -1) {
-                btn.className += ' ' + 'btnAdd';
+            if (ipt.value.length > 0) {
+                if (btn.className.indexOf('btnAdd') == -1) {
+                    btn.className += ' ' + 'btnAdd';
+                }
+            } else {
+                btn.className = 'btn';
             }
-        } else {
-            btn.className = 'btn';
+
         }
+        //利用事件委托处理
+    for (var i = 0; i < list.length; i++) {
+        list[i].onclick = function(e) {
+            if (e.target.className == 'delete') {
+                fnDel(e.target);
+            } else if (e.target.className == 'todo-check') {
+                fnCheck(e.target);
+            }
 
+        }
     }
-
     btn.onclick = function() {
         var newEle = document.createElement('li');
         var inputVal = ipt.value.trim();
         //首先判断用户输入是否为空
         if (inputVal.length !== 0) {
-            newEle.innerHTML = '<input id="item-' + ul.children.length + ' " type="checkbox" class="todo-check ">' + '<span class="txt">' + inputVal + '</span>' + '<span class="delete"></span>';
-            newEle.querySelector('input').addEventListener('click', fnCheck);
-            newEle.querySelector('.delete').addEventListener('click', fnDel);
+            newEle.innerHTML = '<input id="item-' + ul.children.length + ' " type="checkbox" class="todo-check">' + '<span class="txt">' + inputVal + '</span>' + '<span class="delete"></span>';
+            // newEle.querySelector('input').addEventListener('click', fnCheck);
+            // newEle.querySelector('.delete').addEventListener('click', fnDel);
             ul.insertBefore(newEle, ul.children[0]);
             showType();
             getProgress();
@@ -92,26 +102,26 @@
 
     }
 
-    function fnDel() {
-        this.parentNode.parentNode.removeChild(this.parentNode);
+    function fnDel(target) {
+        target.parentNode.parentNode.removeChild(target.parentNode);
 
         showType();
         getProgress();
     }
 
-    function fnCheck() {
-        var item = this.parentNode.cloneNode(true);
-        item.querySelector('input').checked = this.checked;
-        item.querySelector('.delete').addEventListener('click', fnDel);
-        item.querySelector('input').addEventListener('click', fnCheck);
+    function fnCheck(target) {
+        var item = target.parentNode.cloneNode(true);
+        item.querySelector('input').checked = target.checked;
+        // item.querySelector('.delete').addEventListener('click', fnDel);
+        // item.querySelector('input').addEventListener('click', fnCheck);
         //复选框被勾选，则已完成添加，未完成删除
-        if (this.checked) {
-            ul.removeChild(this.parentNode);
+        if (target.checked) {
+            ul.removeChild(target.parentNode);
             completeList.children[1].insertBefore(item, completeList.children[1].children[0]);
         } //复选框取消勾选，未完成添加，已完成删除
         else {
             ul.appendChild(item);
-            completeList.children[1].removeChild(this.parentNode);
+            completeList.children[1].removeChild(target.parentNode);
         }
         showType();
         getProgress();
