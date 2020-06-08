@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="app">
+        <h1>Daily To-Do list manager</h1>
+        <div class="box">
+            <div class="date"></div>
+            <form>
+                <input type="text" class='inputTxt' placeholder="Take the garbage out">
+                <div class="btn">+</div>
+            </form>
+            <div id="todo" class="content">
+                <div class="summary"></div>
+                <ul class='todolist'>
+                </ul>
+            </div>
+            <div class="empty" style="display: none;">
+                <img src="images/beer_celebration.svg" alt="celebration"> Time to chill! You have no todos.
+            </div>
+            <div id="completlist" class="content" style="display: none;">
+                <div class="summary "></div>
+                <ul class='todolist'>
+
+                </ul>
+            </div>
+            <div class="operation">
+                <div class="btn-oper">Show Complete</div>
+                <div class="btn-oper">Clear All</div>
+
+            </div>
+        </div>
+    </div>
+
+</body>
+<script>
+    function getToday() {
+        var currentDay = new Date();
+        var weekDay = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        var month = currentDay.getMonth() + 1;
+        month = month < 10 ? '0' + month : month;
+        var day = currentDay.getDate();
+        var year = currentDay.getFullYear();
+        return weekDay[currentDay.getDay()] + '<br/>' + month + '-' + day + '-' + year; //获取周几0-6
+    }
+    var date = document.querySelector('.date');
+    date.innerHTML = getToday();
+
+    var oper = document.querySelector('.operation');
+    var btn = document.querySelector('.btn');
+    var content = document.querySelector('#todo');
+    var ul = content.children[1];
+    var des = content.children[0];
+    var ipt = document.querySelector('.inputTxt');
+    var cls = oper.children;
+    var empty = document.querySelector('.empty');
+    var completeList = document.querySelector('#completlist');
+
+
+    ipt.onkeyup = function() {
+        if (ipt.value.length > 0) {
+            if (btn.className.indexOf('btnAdd') == -1) {
+                btn.className += ' ' + 'btnAdd';
+            }
+        } else {
+            btn.className = 'btn';
+        }
+
+    }
+
+    btn.onclick = function() {
+        var newEle = document.createElement('li');
+        var inputVal = ipt.value.trim();
+        //首先判断用户输入是否为空
+        if (inputVal.length !== 0) {
+            newEle.innerHTML = '<input id="item-' + ul.children.length + ' " type="checkbox" class="todo-check ">' + '<span class="txt">' + inputVal + '</span>' + '<span class="delete"></span>';
+            newEle.querySelector('input').addEventListener('click', fnCheck);
+            newEle.querySelector('.delete').addEventListener('click', fnDel);
+            ul.insertBefore(newEle, ul.children[0]);
+            showType();
+            getProgress();
+            btn.className = 'btn';
+            ipt.value = '';
+        }
+
+    }
+
+    function fnDel() {
+        this.parentNode.parentNode.removeChild(this.parentNode);
+
+        showType();
+        getProgress();
+    }
+
+    function fnCheck() {
+        var item = this.parentNode.cloneNode(true);
+        item.querySelector('input').checked = this.checked;
+        item.querySelector('.delete').addEventListener('click', fnDel);
+        item.querySelector('input').addEventListener('click', fnCheck);
+        //复选框被勾选，则已完成添加，未完成删除
+        if (this.checked) {
+            ul.removeChild(this.parentNode);
+            completeList.children[1].insertBefore(item, completeList.children[1].children[0]);
+        } //复选框取消勾选，未完成添加，已完成删除
+        else {
+            ul.appendChild(item);
+            completeList.children[1].removeChild(this.parentNode);
+        }
+        showType();
+        getProgress();
+    }
+
+    var flag = 0;
+    cls[0].onclick = function() {
+            if (!flag) {
+                this.innerHTML = 'Hide Complete';
+                completeList.style.display = 'block';
+                flag = 1;
+            } else {
+                this.innerHTML = 'Show Complete';
+                completeList.style.display = 'none';
+                flag = 0;
+            }
+
+        }
+        //判断是否存在完成项目
+    function isExistComplete() {
+        if (completeList.children[1].children.length == 0) {
+            if (flag) {
+                completeList.style.display = 'none';
+                oper.children[0].innerHTML = 'Show Complete';
+                oper.children[0].style.display = 'none';
+                flag = 0;
+            }
+        }
+    }
+    cls[1].onclick = function() {
+        ul.innerHTML = '';
+        completeList.children[1].innerHTML = '';
+        completeList.style.display = 'none';
+        showType();
+    }
+
+    function showType() {
+        if (ul.children.length == 0) {
+            empty.style.display = 'block';
+            content.style.display = 'none';
+            if (completeList.children[1].children.length == 0) {
+                oper.style.display = 'none';
+
+            } else {
+                oper.style.display = 'block';
+                oper.children[0].style.display = 'block';
+
+            }
+
+        } else {
+            empty.style.display = 'none';
+            content.style.display = 'block';
+            oper.style.display = 'block';
+            des.innerHTML = 'You have ' + ul.children.length + ' pending item';
+            if (ul.children.length > 1) {
+                des.innerHTML += 's';
+            }
+            if (completeList.children[1].children.length == 0) {
+                oper.children[0].style.display = 'none';
+
+
+            } else {
+                oper.children[0].style.display = 'block';
+
+
+            }
+        }
+        isExistComplete();
+    }
+    //获取完成进度
+    function getProgress() {
+        var total = content.children[1].children.length + completeList.children[1].children.length;
+        completeList.children[0].innerHTML = 'Completed tasks:' + Math.floor(completeList.children[1].children.length / total * 100) + '%';
+    }
+</script>
+
+</html>
